@@ -1,5 +1,0 @@
-{
-    "require": {
-        "workerman/phpsocket.io": "^1.1"
-    }
-}
