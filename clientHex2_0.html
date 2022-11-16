@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var numJoueur = -1;
+            var couleurs=["red","blue"];
+
+            var socket = io();
+            function test() {
+                console.log("J'appelle le serveur");
+                socket.emit('test', "Ô serveur, je t'envoie ce message");
+            }
+            socket.on('test', data => {
+                console.log('Réponse du serveur');
+                console.dir(data);
+            });
+            
+            function demandeJoueurs(){
+                console.log('Demande des joueurs');
+                socket.emit('joueurs');
+            }
+            socket.on('joueurs', nomsJoueurs => {
+                console.log("jouerus reçus du serveur : ");
+                console.dir(nomsJoueurs); //console de l'ordi
+                $("#listeJoueurs").text(nomsJoueurs);
+            });
+
+            function reset(){
+                socket.emit('reset');
+                numJoueur = -1;
+                $("#listeJoueurs").text("");
+            }
+            $('#reset').on('click', reset);
+
+            socket.on('joueurs', () => {
+                let nomsJoueurs = joueurs.join(' ');
+                socket.emit('joueurs', nomsJoueurs);
+            });
+
+            function entrerDansLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Entré de "+ nom);
+                if(nom != "" && nom != " "){
+                    console.log("   emission de "+ nom);
+                    socket.emit('entree', nom);
+                }
+            }
+            socket.on('entree', data =>{
+                numJoueur = data.numJoueur;
+                console.log("confirmation de l'entre de "+ numJoueur);
+                $("#btentree").toggle();
+                $("#listeJoueurs").text(data.nomsJoueurs);
+            });
+            socket.on('entreeAutreJoueur', data =>{
+                console.log("le serveur confirme l'entrée de "+ data.nomJoueur);
+                $('#listeJoueurs').text(data.nomsJoueurs);
+                if(data.nomsJoueurs.length == 2){
+                    $('#btentree').hide();
+                }
+            });
+
+            socket.on('message', data =>{
+                console.log("erreur : "+data);
+                console.dir("erreur : " +data); //console de l'ordi
+            });
+
+            function placerPion(){
+                console.log("placerPion de la part de "+ numJoueur);
+                var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
+                if(numJoueur != -1){
+                    socket.emit('pion', {'numHexagone': numHexagone, 'numJoueur':numJoueur});
+                }
+            }
+            socket.on('pion', data =>{
+                console.log("       socket pion client "+ numJoueur);
+                console.log('#h'+data.numHexagone);
+                $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
+            });
+            
+
+            window.addEventListener('load', () => { demandeJoueurs(); genereDamier(20, 11, 11); });
+            function creeHexagone(rayon) {
+                let points = new Array();
+                for (var i = 0; i < 6; ++i) {
+                    var angle = i * Math.PI / 3;
+                    var x = Math.sin(angle) * rayon; 
+                    var y = -Math.cos(angle) * rayon;
+                    points.push([Math.round(x*100)/100, Math.round(y*100)/100]);
+                }
+                return points;
+            }
+            function genereDamier(rayon, nbLignes, nbColonnes) {
+            distance = rayon - (Math.sin(1 * Math.PI / 3) * rayon);
+            d3.select("#tablier").append("svg").attr("width", (nbLignes*2)*2*rayon).attr("height",nbLignes*2*rayon);
+            var hexagone = creeHexagone(rayon);
+            for (var ligne=0; ligne < nbLignes; ligne++) {
+                for (var colonne=0; colonne < nbColonnes; colonne++) {
+                    var d = ""; 
+                    var x, y;
+                    for (h in hexagone) {
+                        x = hexagone[h][0]+(rayon-distance)*(2+ligne+2*colonne);
+                        y = distance*2 + hexagone[h][1]+(rayon-distance*2)*(1+2*ligne);
+                        if (h == 0){ 
+                            d += "M"+x+","+y+" L"; 
+                        }else{ 
+                            d += x+","+y+" ";
+                        }
+                    } // gènère la forme
+                    d += "Z";
+                    d3.select("svg")
+                    .append("path")
+                    .attr("d", d).attr("stroke", "black").attr("fill", "white")
+                    .attr("id", "h"+(ligne*11+colonne))
+                    .on("click", placerPion);
+                }
+            }
+        }
+            window.addEventListener('load', () => { test(); } );
+        </script>
+    </head>
+    <body> Un jeu de Hex 
+        <br>
+        Joueurs : <label id = "listeJoueurs"></label> 
+        <br/>
+        Votre nom <input id = "nom" type = "text"/>
+        <button type = "button" onClick = "entrerDansLaPartie()" id="btentree">Entrer dans la partie</button>
+        <button type = "button" onClick = "quitterLaPartie()" id="btquitee">Quitter la partie</button>
+        <button type = "button" onClick = "reset()">reset</button>
+        
+        <div id="tablier"></div>
+    </body>
+</html>

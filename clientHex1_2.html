@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script>
+    function entrerDansLaPartie() {
+        let nom = document.getElementById("nom").value;
+        if(nom.replace(/\s+\g/, "") !=""){
+            $("#btentree").toggle();
+            $.getJSON("http://localhost:8888/entree/" + nom ,
+            function(data) {
+                $("#listeJoueurs").empty().text(data.joueurs.join(" "));
+            });
+        }
+    }
+    function quitterLaPartie() {
+        let nom = document.getElementById("nom").value;
+        if(nom.replace(/\s+\g/, "") !=""){
+            $("#btentree").toggle();
+            $.getJSON("http://localhost:8888/sortie/" + nom ,
+            function(data) {
+                $("#listeJoueurs").empty().text(data.joueurs.join(" "));
+            });
+        }
+    }
+
+    var memoireListeJoueurs ="";
+    function majJoueur(){
+        $.getJSON("http://localhost:8888/joueurs",
+            function(data) {
+                noms = data.join(" ");
+                if(noms != memoireListeJoueurs){
+                    $("#listeJoueurs").text(noms);
+                }
+                memoireListeJoueurs = noms;
+                
+            });
+    }
+    setInterval(majJoueur, 1000);
+
+/*     function jouer() {
+        let nom = document.getElementById("nom").value;
+        $.getJSON("http://localhost:8888/pion/" + po +"/"+numjou,
+        function(data) {
+            $("#listeJoueurs").empty().text(data.joueurs.join(" "));
+        });
+    } */
+
+    //damier 
+    window.addEventListener('load', (event) => { genereDamier(20, 11, 11); });
+    function creeHexagone(rayon) {
+        let points = new Array();
+        for (var i = 0; i < 6; ++i) {
+            var angle = i * Math.PI / 3;
+            var x = Math.sin(angle) * rayon; 
+            var y = -Math.cos(angle) * rayon;
+            points.push([Math.round(x*100)/100, Math.round(y*100)/100]);
+        }
+        return points;
+    }
+    function genereDamier(rayon, nbLignes, nbColonnes) {
+        distance = rayon - (Math.sin(1 * Math.PI / 3) * rayon);
+        d3.select("#tablier").append("svg").attr("width", (nbLignes*2)*2*rayon).attr("heigh",nbLignes*2*rayon);
+        var hexagone = creeHexagone(rayon);
+        for (var ligne=0; ligne < nbLignes; ligne++) {
+            for (var colonne=0; colonne < nbColonnes; colonne++) {
+                var d = ""; var x, y;
+                for (h in hexagone) {
+                    x = hexagone[h][0]+(rayon-distance)*(2+2*colonne);
+                    y = distance*2 + hexagone[h][1]+(rayon-distance*2)*(1+2*ligne);
+                    if (h == 0){ 
+                        d += "M"+x+","+y+" L"; 
+                    }else{ 
+                        d += x+","+y+" ";
+                    }
+                }
+                d += "Z";
+                d3.select("svg")
+                .append("path")
+                .attr("d", d).attr("stroke", "black").attr("fill", "white")
+                .attr("id", "h"+(ligne*11+colonne))
+                .on("click", function(d) { d3.select(this).attr('fill', 'red'); });
+            }
+        }
+    }
+    </script>
+</head>
+<body> Un jeu de Hex <br>
+Joueurs : <label id = "listeJoueurs"></label> <br/>
+Votre nom <input id = "nom" type = "text"/>
+<button type = "button" onClick = "entrerDansLaPartie()" id="btentree">
+Entrer dans la partie
+</button>
+<button type = "button" onClick = "quitterLaPartie()" id="btquitee">
+Quitter la partie
+</button>
+<div id="tablier"></div>
+</body>
+</html>

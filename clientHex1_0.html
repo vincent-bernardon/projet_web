@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script>
+    function entrerDansLaPartie() {
+        let nom = document.getElementById("nom").value;
+        if(nom.replace(/\s+\g/, "") !=""){
+            $("#btentree").toggle();
+            $.getJSON("http://localhost:8888/entree/" + nom ,
+            function(data) {
+                $("#listeJoueurs").empty().text(data.joueurs.join(" "));
+            });
+        }
+    }
+    function quitterLaPartie() {
+        let nom = document.getElementById("nom").value;
+        if(nom.replace(/\s+\g/, "") !=""){
+            $("#btentree").toggle();
+            $.getJSON("http://localhost:8888/sortie/" + nom ,
+            function(data) {
+                $("#listeJoueurs").empty().text(data.joueurs.join(" "));
+            });
+        }
+    }
+
+    var memoireListeJoueurs ="";
+    function majJoueur(){
+        $.getJSON("http://localhost:8888/joueurs",
+            function(data) {
+                noms = data.join(" ");
+                if(noms != memoireListeJoueurs){
+                    $("#listeJoueurs").text(noms);
+                }
+                memoireListeJoueurs = noms;
+                
+            });
+    }
+    setInterval(majJoueur, 1000);
+
+    function jouer() {
+        let nom = document.getElementById("nom").value;
+        $.getJSON("http://localhost:8888/pion/" + po +"/"+numjou,
+        function(data) {
+            $("#listeJoueurs").empty().text(data.joueurs.join(" "));
+        });
+    }
+    </script>
+</head>
+<body> Un jeu de Hex <br>
+Joueurs : <label id = "listeJoueurs"></label> <br/>
+Votre nom <input id = "nom" type = "text"/>
+<button type = "button" onClick = "entrerDansLaPartie()" id="btentree">
+Entrer dans la partie
+</button>
+<button type = "button" onClick = "quitterLaPartie()" id="btquitee">
+Quitter la partie
+</button>
+</body>
+</html>
