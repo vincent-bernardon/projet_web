@@ -1,0 +1,12 @@
+On doit définir les regles de jeu que l'on veut implementer, notament au niveau des bloqueurs.
+Ce que je te propose c'est de creer des paroies bloquantes au niveau des hexagones:
+
+paroie G: les trois cotés à gauche deviennent vert
+paroie D: mm chose mais sur les trois cotés à droite
+paroie H: les deux cotés en haut (ceux qui forment la pointe haute) deviennent vert
+paroie B:          //       bas (ceux qui forment la pointe en bas de l'hexagone) deviennent vert
+
+On creer un compteur qui compte le nombre de paroies restantes pour chacun des joueurs, ainsi qu'un bouton qui permettra au joueur de specifier s'il 
+veut ou non utiliser un bloqueurs.
+
+Je vais bosser sur le tchat et sa comme sa je pourrais au moins dire que j'ai fais quelque chose.
