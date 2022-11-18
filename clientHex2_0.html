@@ -43,7 +43,7 @@
             function entrerDansLaPartie(){
                 let nom = document.getElementById("nom").value;
                 console.log("Entré de "+ nom);
-                if(nom != "" && nom != " "){
+                if(nom != "" && nom != " "){                   //Pourquoi ce if?
                     console.log("   emission de "+ nom);
                     socket.emit('entree', nom);
                 }
@@ -51,8 +51,8 @@
             socket.on('entree', data =>{
                 numJoueur = data.numJoueur;
                 console.log("confirmation de l'entre de "+ numJoueur);
-                $("#btentree").toggle();
-                $("#listeJoueurs").text(data.nomsJoueurs);
+                $("#btentree").toggle();                       //*
+                $("#listeJoueurs").text(data.nomsJoueurs);     //*
             });
             socket.on('entreeAutreJoueur', data =>{
                 console.log("le serveur confirme l'entrée de "+ data.nomJoueur);
