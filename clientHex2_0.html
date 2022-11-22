@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
     <head>
+        <style>
+            #popup{
+                display: none;
+            }
+        </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="/socket.io/socket.io.js"></script>
@@ -20,46 +25,72 @@
             
             function demandeJoueurs(){
                 console.log('Demande des joueurs');
-                socket.emit('joueurs');
+                socket.emit('joueursS');
             }
-            socket.on('joueurs', nomsJoueurs => {
+            socket.on('joueursC', nomsJoueurs => {
                 console.log("jouerus reçus du serveur : ");
                 console.dir(nomsJoueurs); //console de l'ordi
                 $("#listeJoueurs").text(nomsJoueurs);
             });
 
             function reset(){
-                socket.emit('reset');
+                socket.emit('resetS');
                 numJoueur = -1;
                 $("#listeJoueurs").text("");
             }
             $('#reset').on('click', reset);
 
-            socket.on('joueurs', () => {
-                let nomsJoueurs = joueurs.join(' ');
-                socket.emit('joueurs', nomsJoueurs);
+            socket.on('switchNum', data =>{
+                console.log("changmenet "+data);
+                numJoueur=data;
+            });
+            
+            function softreset(){
+                document.getElementById("popup").style.display = "none";
+                genereDamier(20, 11, 11);
+                io.emit('softresetS');
+            }
+
+            function cacher(){
+                document.getElementById("popup").style.display = "none";
+            }
+
+            socket.on('choixContinu', data=>{
+                console.dir("popup");
+                document.getElementById("popup").style.display = "block";
             });
 
             function entrerDansLaPartie(){
                 let nom = document.getElementById("nom").value;
                 console.log("Entré de "+ nom);
-                if(nom != "" && nom != " "){                   //Pourquoi ce if?
+                if(nom != "" && nom != " "){                   // T:Pourquoi ce if? V: car on vérif si le nom c'est pas vide, ou juste un espace
                     console.log("   emission de "+ nom);
-                    socket.emit('entree', nom);
+                    socket.emit('entreeS', nom);
                 }
             }
-            socket.on('entree', data =>{
+            function quitterLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Sortie de "+ nom);
+                console.log(" emission de sortie pour "+ nom);
+                socket.emit('sortieS',nom);
+            }
+            socket.on('entreeC', data =>{
                 numJoueur = data.numJoueur;
                 console.log("confirmation de l'entre de "+ numJoueur);
-                $("#btentree").toggle();                       //*
-                $("#listeJoueurs").text(data.nomsJoueurs);     //*
+                $("#btentree").toggle();                       //* pour hide le boutont entré dans la partie
+                $("#listeJoueurs").text(data.nomsJoueurs);     //* pour actualiser la liste des joueurs de la partie
             });
-            socket.on('entreeAutreJoueur', data =>{
+            socket.on('entreeAutreJoueurC', data =>{
                 console.log("le serveur confirme l'entrée de "+ data.nomJoueur);
                 $('#listeJoueurs').text(data.nomsJoueurs);
                 if(data.nomsJoueurs.length == 2){
                     $('#btentree').hide();
                 }
+            });
+            socket.on('sortieC', data=>{
+                nomJoueur = data;
+                console.log("confirmation de la sortie de "+ nomJoueur);
+                $("#btentree").toggle();
             });
 
             socket.on('message', data =>{
@@ -71,10 +102,10 @@
                 console.log("placerPion de la part de "+ numJoueur);
                 var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
                 if(numJoueur != -1){
-                    socket.emit('pion', {'numHexagone': numHexagone, 'numJoueur':numJoueur});
+                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur});
                 }
             }
-            socket.on('pion', data =>{
+            socket.on('pionC', data =>{
                 console.log("       socket pion client "+ numJoueur);
                 console.log('#h'+data.numHexagone);
                 $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
@@ -131,5 +162,13 @@
         <button type = "button" onClick = "reset()">reset</button>
         
         <div id="tablier"></div>
+        <div id="popup">
+            <form action="">
+                <p>Un joueur est partie !!</p>
+                <p>Voulez vous commencer une nouvelle partie ? ou continuelle celle la ?</p>
+                <button type = "button" onClick = "softreset()">OUI</button>
+                <button type = "button" onClick = "cacher()">NON</button>
+            </form>
+        </div>
     </body>
 </html>

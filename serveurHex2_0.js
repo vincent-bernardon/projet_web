@@ -35,9 +35,14 @@ io.on('connection', (socket) => {
             hex.push(-1);
         }
     }
-    socket.on('reset', reset);
+    socket.on('resetS', reset);
 
-    socket.on('entree', nomJoueur => {
+    socket.on('joueursS', () => {
+        let nomsJoueurs = joueurs.join(' ');
+        socket.emit('joueursC', nomsJoueurs);
+    });
+
+    socket.on('entreeS', nomJoueur => {
         console.log("arrivage de "+nomJoueur);
         if(joueurs.length<2){
             if(!joueurs.includes(nomJoueur)){
@@ -48,9 +53,9 @@ io.on('connection', (socket) => {
                     jeton = 0;
                 }
                 let nomsJoueurs = joueurs.join(' ');
-                socket.emit('entree',{'nomJoueur':nomJoueur, 'numJoueur':joueurs.length-1, 'nomsJoueurs':nomsJoueurs});
+                socket.emit('entreeC',{'nomJoueur':nomJoueur, 'numJoueur':joueurs.length-1, 'nomsJoueurs':nomsJoueurs});
                 if(joueurs.length > 1){
-                    socket.broadcast.emit('entreeAutreJoueur', {'nomJoueur':nomJoueur,'nomsJoueurs':nomsJoueurs});
+                    socket.broadcast.emit('entreeAutreJoueurC', {'nomJoueur':nomJoueur,'nomsJoueurs':nomsJoueurs});
                 }
             }else{
                 console.log("mission failed : entree du joueur");
@@ -61,7 +66,37 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('pion', data =>{
+    socket.on('softresetS', data =>{
+        jeton = 0;
+        dernierPion = -1;
+        hex = [];
+        for (i=0; i<121; i++) {
+            hex.push(-1);
+        }
+        
+    });
+
+    socket.on('sortieS', nomJoueur =>{
+        console.log("demande de sorti pour "+ nomJoueur);
+        let index = joueurs.indexOf(nomJoueur);
+        if(index != -1){
+            joueurs.splice(index,1);
+            let nomsJoueurs = joueurs.join(' ');
+            socket.emit('sortieC',nomJoueur);
+            io.emit('joueursC',nomsJoueurs);
+
+            socket.broadcast.emit('choixContinu', index);
+
+            if(index == 0){
+                socket.broadcast.emit('switchNum', index);
+            }
+            
+        }else{
+            socket.emit('message', 'Joueur peu pas sortire');
+        }
+    });
+
+    socket.on('pionS', data =>{
         if(jeton != -1){
             if(data.numJoueur == jeton){
                 let position = data.numHexagone;
@@ -73,7 +108,7 @@ io.on('connection', (socket) => {
                             jeton = 0;
                         }
                         console.log("Pion palcé en "+position+" par "+data.numJoueur);
-                        io.emit('pion', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur}); //faire le io sinon que le client qui est aucourant
+                        io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur}); //faire le io sinon que le client qui est aucourant
                     }else{
                         socket.emit("message", "Emplacement deja pris");
                     }
