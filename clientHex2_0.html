@@ -22,7 +22,33 @@
                 console.log('Réponse du serveur');
                 console.dir(data);
             });
-            
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour ADMIN
+             * 
+            */ 
+            function reset(){
+                socket.emit('resetS');
+                numJoueur = -1;
+                $("#listeJoueurs").text("");
+            }
+            $('#reset').on('click', reset);
+
+            socket.on('message', data =>{
+                console.log("erreur : "+data);
+                console.dir("erreur : " +data); //console de l'ordi
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+            /**
+             *  ---------------------------------
+             *  fonctions pour actualisé
+             * 
+            */  
             function demandeJoueurs(){
                 console.log('Demande des joueurs');
                 socket.emit('joueursS');
@@ -32,34 +58,16 @@
                 console.dir(nomsJoueurs); //console de l'ordi
                 $("#listeJoueurs").text(nomsJoueurs);
             });
-
-            function reset(){
-                socket.emit('resetS');
-                numJoueur = -1;
-                $("#listeJoueurs").text("");
-            }
-            $('#reset').on('click', reset);
-
-            socket.on('switchNum', data =>{
-                console.log("changmenet "+data);
-                numJoueur=data;
-            });
-            
-            function softreset(){
-                document.getElementById("popup").style.display = "none";
-                genereDamier(20, 11, 11);
-                io.emit('softresetS');
-            }
-
-            function cacher(){
-                document.getElementById("popup").style.display = "none";
-            }
-
-            socket.on('choixContinu', data=>{
-                console.dir("popup");
-                document.getElementById("popup").style.display = "block";
-            });
-
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+            /**
+             *  ---------------------------------
+             *  fonctions pour entré dans partie
+             * 
+            */
             function entrerDansLaPartie(){
                 let nom = document.getElementById("nom").value;
                 console.log("Entré de "+ nom);
@@ -68,12 +76,7 @@
                     socket.emit('entreeS', nom);
                 }
             }
-            function quitterLaPartie(){
-                let nom = document.getElementById("nom").value;
-                console.log("Sortie de "+ nom);
-                console.log(" emission de sortie pour "+ nom);
-                socket.emit('sortieS',nom);
-            }
+
             socket.on('entreeC', data =>{
                 numJoueur = data.numJoueur;
                 console.log("confirmation de l'entre de "+ numJoueur);
@@ -87,17 +90,63 @@
                     $('#btentree').hide();
                 }
             });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+            /**
+             *  ---------------------------------
+             *  fonctions pour quité la partie
+             * 
+            */  
+            function quitterLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Sortie de "+ nom);
+                console.log(" emission de sortie pour "+ nom);
+                socket.emit('sortieS',nom);
+            }
             socket.on('sortieC', data=>{
                 nomJoueur = data;
                 console.log("confirmation de la sortie de "+ nomJoueur);
                 $("#btentree").toggle();
             });
-
-            socket.on('message', data =>{
-                console.log("erreur : "+data);
-                console.dir("erreur : " +data); //console de l'ordi
+            socket.on('choixContinu', data=>{
+                console.dir("popup");
+                document.getElementById("popup").style.display = "block";
             });
-
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+            /**
+             *  ---------------------------------
+             *  fonctions pour la popup
+             * 
+            */    
+            function softreset(){
+                document.getElementById("popup").style.display = "none";
+                genereDamier(20, 11, 11);
+                io.emit('softresetS');
+            }   
+            socket.on('switchNum', data =>{
+                console.log("changmenet "+data);
+                numJoueur=data;
+            });
+            function cacher(){
+                document.getElementById("popup").style.display = "none";
+            }                                
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+            /**
+             *  ---------------------------------
+             *  fonctions pour pion
+             * 
+            */            
             function placerPion(){
                 console.log("placerPion de la part de "+ numJoueur);
                 var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
@@ -110,8 +159,16 @@
                 console.log('#h'+data.numHexagone);
                 $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
             });
-            
-
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */            
+            /**
+             *  ---------------------------------
+             *  fonctions pour le damier
+             * 
+            */ 
             window.addEventListener('load', () => { demandeJoueurs(); genereDamier(20, 11, 11); });
             function creeHexagone(rayon) {
                 let points = new Array();
@@ -124,31 +181,36 @@
                 return points;
             }
             function genereDamier(rayon, nbLignes, nbColonnes) {
-            distance = rayon - (Math.sin(1 * Math.PI / 3) * rayon);
-            d3.select("#tablier").append("svg").attr("width", (nbLignes*2)*2*rayon).attr("height",nbLignes*2*rayon);
-            var hexagone = creeHexagone(rayon);
-            for (var ligne=0; ligne < nbLignes; ligne++) {
-                for (var colonne=0; colonne < nbColonnes; colonne++) {
-                    var d = ""; 
-                    var x, y;
-                    for (h in hexagone) {
-                        x = hexagone[h][0]+(rayon-distance)*(2+ligne+2*colonne);
-                        y = distance*2 + hexagone[h][1]+(rayon-distance*2)*(1+2*ligne);
-                        if (h == 0){ 
-                            d += "M"+x+","+y+" L"; 
-                        }else{ 
-                            d += x+","+y+" ";
-                        }
-                    } // gènère la forme
-                    d += "Z";
-                    d3.select("svg")
-                    .append("path")
-                    .attr("d", d).attr("stroke", "black").attr("fill", "white")
-                    .attr("id", "h"+(ligne*11+colonne))
-                    .on("click", placerPion);
+                distance = rayon - (Math.sin(1 * Math.PI / 3) * rayon);
+                d3.select("#tablier").append("svg").attr("width", (nbLignes*2)*2*rayon).attr("height",nbLignes*2*rayon);
+                var hexagone = creeHexagone(rayon);
+                for (var ligne=0; ligne < nbLignes; ligne++) {
+                    for (var colonne=0; colonne < nbColonnes; colonne++) {
+                        var d = ""; 
+                        var x, y;
+                        for (h in hexagone) {
+                            x = hexagone[h][0]+(rayon-distance)*(2+ligne+2*colonne);
+                            y = distance*2 + hexagone[h][1]+(rayon-distance*2)*(1+2*ligne);
+                            if (h == 0){ 
+                                d += "M"+x+","+y+" L"; 
+                            }else{ 
+                                d += x+","+y+" ";
+                            }
+                        } // gènère la forme
+                        d += "Z";
+                        d3.select("svg")
+                        .append("path")
+                        .attr("d", d).attr("stroke", "black").attr("fill", "white")
+                        .attr("id", "h"+(ligne*11+colonne))
+                        .on("click", placerPion);
+                    }
                 }
             }
-        }
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */         
             window.addEventListener('load', () => { test(); } );
         </script>
     </head>

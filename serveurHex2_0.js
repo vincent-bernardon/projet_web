@@ -26,6 +26,11 @@ io.on('connection', (socket) => {
         socket.emit('test', {'quiterepond': 'le serveur !'})
     });
 
+    /**
+     *  ---------------------------------
+     *  fonctions pour ADMIN
+     * 
+    */  
     function reset(){
         jeton = -1;
         dernierPion = -1;
@@ -36,12 +41,30 @@ io.on('connection', (socket) => {
         }
     }
     socket.on('resetS', reset);
-
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */
+    /**
+     *  ---------------------------------
+     *  fonctions pour actualisé
+     * 
+    */  
     socket.on('joueursS', () => {
         let nomsJoueurs = joueurs.join(' ');
         socket.emit('joueursC', nomsJoueurs);
     });
-
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */    
+    /**
+     *  ---------------------------------
+     *  fonctions pour entré dans partie
+     * 
+    */  
     socket.on('entreeS', nomJoueur => {
         console.log("arrivage de "+nomJoueur);
         if(joueurs.length<2){
@@ -65,17 +88,16 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Déja deux joueur');
         }
     });
-
-    socket.on('softresetS', data =>{
-        jeton = 0;
-        dernierPion = -1;
-        hex = [];
-        for (i=0; i<121; i++) {
-            hex.push(-1);
-        }
-        
-    });
-
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */
+    /**
+     *  ---------------------------------
+     *  fonctions pour quité la partie
+     * 
+    */ 
     socket.on('sortieS', nomJoueur =>{
         console.log("demande de sorti pour "+ nomJoueur);
         let index = joueurs.indexOf(nomJoueur);
@@ -95,7 +117,35 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Joueur peu pas sortire');
         }
     });
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */
+    /**
+     *  ---------------------------------
+     *  fonctions pour la popup
+     * 
+    */
+    socket.on('softresetS', data =>{
+        jeton = 0;
+        dernierPion = -1;
+        hex = [];
+        for (i=0; i<121; i++) {
+            hex.push(-1);
+        }
 
+    });
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */
+    /**
+     *  ---------------------------------
+     *  fonction pour la popup
+     * 
+    */
     socket.on('pionS', data =>{
         if(jeton != -1){
             if(data.numJoueur == jeton){
@@ -122,4 +172,9 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Parti pas débuté');
         }
     });
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */
 });
