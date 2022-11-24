@@ -24,7 +24,9 @@
                 background-color: crimson;
                 border-color: blueviolet;
                 border-style: groove;
+                display: flex;
             }
+
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
@@ -238,7 +240,10 @@
             */ 
             function envoiMessage(){
                 let message  = document.getElementById("message").value;
-                socket.emit('chat', {'numJoueur':numJoueur, 'message':message});   
+                if(message != ""){
+                    document.getElementById("message").value="";
+                    socket.emit('chat', {'numJoueur':numJoueur, 'message':message});   
+                }
             }
             socket.on('chatrotation', messages =>{
                 messages.forEach(message => {
@@ -269,10 +274,10 @@
 
         <div id="contourchat">
             <div id="chat">
-                <p id="chat3"></p>
-                <p id="chat2"></p>
-                <p id="chat1"></p>
-                <p id="chat0"></p>
+                <p id="chat3"> </p>
+                <p id="chat2"> </p>
+                <p id="chat1"> </p>
+                <p id="chat0"> </p>
                 <input id = "message" type = "text"/>
                 <button type = "button" onClick = "envoiMessage()" id="btchat">Evoyer votre message</button>
             </div>
