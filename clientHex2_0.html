@@ -3,7 +3,7 @@
     <head>
         <style>
             #popup{
-                /* display: none; */
+                display: none;
                 text-align: center;
                 width: 45%;
                 height: 30%;
@@ -13,6 +13,17 @@
                 background-color: crimson;
                 border: 3px solid #999999;
                 z-index: 9;
+            }
+            #contourchat{
+                position: fixed;
+                bottom: 10%;
+                width: 340px;
+                max-width: 340px;
+                height: 180px;
+                max-height: 180px;
+                background-color: crimson;
+                border-color: blueviolet;
+                border-style: groove;
             }
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -219,7 +230,29 @@
              *  
              *  ----------------------------------
              * 
-            */         
+            */  
+            /**
+             *  ---------------------------------
+             *  fonctions pour le chat
+             * 
+            */ 
+            function envoiMessage(){
+                let message  = document.getElementById("message").value;
+                socket.emit('chat', {'numJoueur':numJoueur, 'message':message});   
+            }
+            socket.on('chatrotation', messages =>{
+                messages.forEach(message => {
+                    console.dir("message : "+messages);
+                    console.log("message : "+messages);
+                    $('#chat'+messages.indexOf(message)).text(message);
+                });
+                
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */        
             window.addEventListener('load', () => { test(); } );
         </script>
     </head>
@@ -233,13 +266,27 @@
         <button type = "button" onClick = "reset()">reset</button>
         
         <div id="tablier"></div>
-        <div id="popup">
-            <form action="">
-                <p>Un joueur est partie !!</p>
-                <p>Voulez vous commencer une nouvelle partie ? ou continuelle celle la ?</p>
-                <button type = "button" onClick = "softreset()">OUI</button>
-                <button type = "button" onClick = "cacher()">NON</button>
-            </form>
+
+        <div id="contourchat">
+            <div id="chat">
+                <p id="chat3"></p>
+                <p id="chat2"></p>
+                <p id="chat1"></p>
+                <p id="chat0"></p>
+                <input id = "message" type = "text"/>
+                <button type = "button" onClick = "envoiMessage()" id="btchat">Evoyer votre message</button>
+            </div>
+
+        <div id="contourpopup">
+            <div id="popup">
+                <form action="">
+                    <p>Un joueur est partie !!</p>
+                    <p>Voulez vous commencer une nouvelle partie ? ou continuelle celle la ?</p>
+                    <button type = "button" onClick = "softreset()">OUI</button>
+                    <button type = "button" onClick = "cacher()">NON</button>
+                </form>
+            </div>
         </div>
+
     </body>
 </html>

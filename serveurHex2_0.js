@@ -6,6 +6,7 @@ const io = new require("socket.io")(server);
 
 var joueurs = [] ;
 var hex = [];
+var messages = [];
 for (i=0; i<121; i++) {
     hex.push(-1);
 }
@@ -177,4 +178,28 @@ io.on('connection', (socket) => {
      *  ----------------------------------
      * 
     */
+    /**
+     *  ---------------------------------
+     *  fonctions pour le chat
+     * 
+    */ 
+    socket.on('chat', data =>{
+        let nomJoueur = joueurs[data.numJoueur];
+        if(joueurs.indexOf(nomJoueur) != -1){
+            let message = nomJoueur+" : "+data.message;
+            if(messages.length > 3){
+                messages.splice(3,1);   
+            }
+            messages.unshift(message);
+            console.dir(messages);
+            io.emit('chatrotation', messages);
+        }else{
+            socket.emit('message', 'peux pas écrire');
+        }
+    });
+    /**
+     *  
+     *  ----------------------------------
+     * 
+    */ 
 });
