@@ -171,7 +171,7 @@
             */            
             function placerPion(){
                 console.log("placerPion de la part de "+ numJoueur);
-                var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
+                var numHexagone = parseInt(d3.select(this).attr('id').substring(1));     // pourquoi a tu: ".attr('id')", il s'agit de quel id?
                 if(numJoueur != -1){
                     socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur});
                 }
