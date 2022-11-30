@@ -14,7 +14,7 @@ var jeton = -1;
 var dernierPion = -1;
 
 app.get('/', (request, response) => {
-    response.sendFile('ClientV2_1.html', {root: __dirname});
+    response.sendFile('ClientV2_1(versionTOTO).html', {root: __dirname});
 });
 
 server.listen(8888, () => { 
@@ -161,13 +161,18 @@ io.on('connection', (socket) => {
                         socket.emit("message", "Case bloqué");
                     }else{*/
                     if(hex[position] == -1){
-                        hex[position] = jeton;
-                        jeton++;                                            //Je n'ai pas encore mis le 'if' qui demande si l'hexagone est bloqué (j'ai un doute quand a où le mettre)
+                        if(data.blocker){
+                            hex[position]=42;
+                        }else{
+                            hex[position] = jeton;
+                            jeton++;                                            //Je n'ai pas encore mis le 'if' qui demande si l'hexagone est bloqué (j'ai un doute quand a où le mettre)
                             if(jeton == 2){ 
                                 jeton = 0;
                             }
                             console.log("Pion placé en "+position+" par "+data.numJoueur);
-                            io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur});
+                        }
+
+                            io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker});
                     }else{
                         socket.emit("message", "Emplacement deja pris");
                     }
@@ -223,12 +228,17 @@ io.on('connection', (socket) => {
             if(data.numJoueur == jeton){
                 let position = data.numHexagone;
                 if(position>=0 && position <121){
-                    if(hex[position] == -1){
-                        hex[position] = jeton;
-                        jeton++; 
-                        if(jeton == 2){ 
-                            jeton = 3;  // j'ai changé ici mais j'ai un doute quand a savoir si c'est bien ce qu'il fallait changer...
+                    if(hex[position] == -1||hex[position] !=42){ //mettre un "ou blocker"
+                        if(data.bocker == true){
+                            hex[position]=42;
+                        }else{
+                            hex[position] = jeton;
+                            jeton++; 
+                            if(jeton == 2){ 
+                                jeton = 0; 
+                            }
                         }
+                        
                         console.log("Pion bloqueur mis en "+position+" par "+data.numJoueur);
                         io.emit('backNope', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur});
                     }else{

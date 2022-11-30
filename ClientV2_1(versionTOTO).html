@@ -9,6 +9,8 @@
                 height: 30%;
                 position: fixed;
                 top: 38%;
+                max-width: 450px;
+                height: 180px;
                 left: 30%;
                 background-color: crimson;
                 border: 3px solid #999999;
@@ -18,8 +20,6 @@
                 position: fixed;
                 bottom: 10%;
                 width: 450px;
-                max-width: 450px;
-                height: 180px;
                 max-height: 180px;
                 background-color: crimson;
                 border-color: black;
@@ -54,6 +54,7 @@
         <script>
             var numJoueur = -1;
             var couleurs=["red","blue"];
+            var bocker= false;
 
             var socket = io();
             function test() {
@@ -198,13 +199,17 @@
                 console.log("placerPion de la part de "+ numJoueur);
                 var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
                 if(numJoueur != -1){
-                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur});
+                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur, 'blocker':bocker});
                 }
             }
             socket.on('pionC', data =>{
                 console.log("       socket pion client "+ numJoueur);
                 console.log('#h'+data.numHexagone);
-                $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
+                if(data.blocker){
+                    $('#h'+data.numHexagone).attr('fill', 'green');
+                }else{
+                    $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
+                }
             });
             /**
              *  
@@ -286,10 +291,13 @@
              * 
             */
             function placerBlock(){
-                console.log(numJoueur+" veut placer un bloqueur");
-                var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
-                if(numJoueur != -1){
-                    socket.emit('nope', {'numHexagone': numHexagone, 'numJoueur':numJoueur});
+                if(bocker == false){
+                    bocker=true;
+                    console.log(numJoueur+" veut placer un bloqueur");
+                    console.log("bocker = "+bocker);
+                    console.dir("bocker = "+bocker);
+                }else{
+                    bocker = false;
                 }
             }
             socket.on('backNope', data =>{
@@ -320,7 +328,7 @@
         <div id="tablier"></div>
 
         <div id = "block">
-            <input type = "checkbox" onclick = "placerBlock()">Bloqueur</input>
+            <button type = "button" onclick = "placerBlock()">Bloqueur</button>
         </div>
 
         <div id="contourchat">
