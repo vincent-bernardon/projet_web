@@ -17,7 +17,6 @@
                 z-index: 9;
             }
             #contourchat{
-                position: fixed;
                 bottom: 10%;
                 width: 450px;
                 height: 180px;
@@ -25,10 +24,10 @@
                 border-color: black;
                 border-style: groove;
                 display: flex;
+                right: 5%;
             }
 
             #block{
-                position: fixed;
                 top: 30%;
                 left: 40%;
                 border-color:crimson;
@@ -36,13 +35,11 @@
             }
 
             #message{
-                position: fixed; 
                 bottom: 11%;
                 left: 1%;
             }
 
             #btchat{
-                position: fixed;
                 bottom: 11%;
                 left: 12%;
             }
@@ -62,9 +59,10 @@
             var bocker= false;
             var compteBlck = 0;
             var nbBlck = 5;
-            var nbCDam = 11;
-            var nbLDam = 11;
+            var nbCDam = 0;
+            var nbLDam = 0;
             var nbJ = 2;
+            var damdam = false;
 
 
             var socket = io();
@@ -106,40 +104,40 @@
             */
 
            function VnbCol(){
-                let Actual = document.getElementById("nbCDam").value;
-                let Modified = document.getElementById("nbCol").value;
-                Actual = Modified;
+                nbCDam= document.getElementById("nbCol").value;
                 $("#VnbCol").toggle();
             }
 
            function VnbLign(){
-                let Actual = document.getElementById("nbLDam").value;
-                let Modified = document.getElementById("nbLign").value;
-                Actual = Modified;
+                nbLDam= document.getElementById("nbLign").value;
                 $("#VnbLign").toggle();
 
             }
 
             function VnbJ(){
-                let Actual = document.getElementById("nbJ").value;
-                let Modified = document.getElementById("NBJ").value;
-                Actual = Modified;
+                nbJ = document.getElementById("NBJ").value;
                 $("#VnbJ").toggle();
             } 
 
 
-           function choix(){
-            console.log("Choix en cours d'envoie");
-            let choixC = document.getElementById("nbCDam").value;
-            let choixL = document.getElementById("nbLDam").value;
-            let choixJ = document.getElementById("nbJ").value;
-            console.dir(choixC + " " + choixL +"  "+ choixJ);
-            if(choixC !=0 && choixL !=0 && choixJ >=2 && choixJ<=4){
-                socket.emit('parametrage',{'nbCDamier':nbCDam, 'nbLDamier':nbLDam, 'nbjoueurs':nbJ});
-                $("#valider").toggle();
-                genereDamier(20, nbLDam, nbCDam);
+            function choix(){
+                console.log("Choix en cours d'envoie");
+                let choixC = nbCDam;
+                let choixL = nbLDam;
+                let choixJ = nbJ;
+                console.dir(choixC + " " + choixL +"  "+ choixJ);
+                if(choixC !=0 && choixL !=0 && choixJ >=2 && choixJ<=4){
+                    socket.emit('parametrage',{'nbCDamier':nbCDam, 'nbLDamier':nbLDam, 'nbjoueurs':nbJ});
+                    $("#valider").toggle();
+                    damdam=true;
+                    //genereDamier(20, nbLDam, nbCDam);
+                }
             }
-           }
+
+            socket.on('paramatrageS', data =>{
+                console.log("entré paramatrageS");
+                genereDamier(20, data.nbLDamier, data.nbCDamier);
+            });
 
             socket.on('PremierJ',nomJoueur =>{
                 console.log(nomJoueur+' doit choisir les paramètres de jeu.');
@@ -263,7 +261,7 @@
                 console.log("placerPion de la part de "+ numJoueur);
                 var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
                 if(numJoueur != -1){
-                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur, 'blocker':bocker, 'compteBlck':compteBlck});
+                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur, 'blocker':bocker});
                 }
             }
             socket.on('pionC', data =>{
@@ -271,7 +269,6 @@
                 console.log('#h'+data.numHexagone);
                 if(data.blocker){
                     bocker = false;
-                    compteBlck=data.compteBlck;
                     $('#h'+data.numHexagone).attr('fill', 'green');
                 }else{
                     $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
@@ -324,7 +321,10 @@
                     }
                 }
             }
-            //window.addEventListener{genereDamier(20,nbLDam,nbCDam)};
+            window.addEventListener('load', () => { demandeJoueurs(); isSetDamier();});
+            function isSetDamier(){
+                socket.emit('isSet');
+            }
             /**
              *  ---------------------------------
              *  fonctions pour le chat

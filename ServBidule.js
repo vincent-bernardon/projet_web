@@ -14,11 +14,11 @@ var jeton = -1;
 var dernierPion = -1;
 var blckUsed = false;
 var nbJoueurs = 2;
-var nbCDamier = 11;
-var nbLDamier = 11;
+var nbCDamier = 0;
+var nbLDamier = 0;
 
 app.get('/', (request, response) => {
-    response.sendFile('ClientV2_1.html', {root: __dirname});
+    response.sendFile('ClientBidule.html', {root: __dirname});
 });
 
 server.listen(8888, () => { 
@@ -105,9 +105,18 @@ io.on('connection', (socket) => {
     */
 
     socket.on('parametrage',data =>{
+        console.log('entré dans parametrage');
         nbJoueurs=data.nbjoueurs;
         nbCDamier=data.nbCDamier;
         nbLDamier=data.nbLDamier;
+        console.log(nbJoueurs+" "+nbCDamier+" "+nbLDamier);
+        io.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier});
+    });
+
+    socket.on('isSet', data=>{
+        if(nbCDamier>0 && nbLDamier>0){
+            io.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier});
+        }
     });
 
     /**
@@ -165,12 +174,13 @@ io.on('connection', (socket) => {
      *  fonction pour le pion
      * 
     */
+   /*
     socket.on('pionS', data =>{
         if(jeton != -1){
             if(data.numJoueur == jeton){
                 let position = data.numHexagone;
                 if(position>=0 && position <121){
-                    if(hex[position] == -1){
+                    if(hex[position] == -1 || hex[position] == 0||hex[position] == 1||hex[position] == 2 || hex[position] == 3 ){
                         if(data.blocker){
                             if(data.compteBlck<=data.nbBlck){
                                 blckUsed = true;
@@ -197,7 +207,7 @@ io.on('connection', (socket) => {
                         io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker, 'compteBlck': data.compteBlck});
                         blckUsed = false;
                     }else{
-                    socket.emit("message", "coordonnées pas bonne");
+                        socket.emit("message", "coordonnées pas bonne");
                     }
                 }else{
                 socket.emit("message", "pas a toi de jouer");
@@ -205,6 +215,37 @@ io.on('connection', (socket) => {
             }else{
             socket.emit('message', 'Parti pas débuté');
             }
+        }
+    });*/
+    socket.on('pionS', data =>{
+        if(jeton != -1){
+            if(data.numJoueur == jeton){
+                let position = data.numHexagone;
+                if(position>=0 && position <121){
+                    if(hex[position] != 42){
+                        if(data.blocker){ // rajouter que si on joue blocker, peux pas rejouer par la suite
+                            hex[position]=42;
+                        }else{
+                            hex[position] = jeton;
+                            jeton++;
+                            if(jeton == 2){ 
+                                jeton = 0;
+                            }
+                            console.log("Pion placé en "+position+" par "+data.numJoueur);
+                        }
+
+                            io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker});
+                    }else{
+                        socket.emit("message", "Emplacement deja pris");
+                    }
+                }else{
+                    socket.emit("message", "coordonnées pas bonne");
+                }
+            }else{
+                socket.emit("message", "pas a toi de jouer");
+            }
+        }else{
+            socket.emit('message', 'Parti pas débuté');
         }
     });
     /**
