@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <style>
+            #popup{
+                display: none;
+                text-align: center;
+                width: 45%;
+                height: 30%;
+                position: fixed;
+                top: 38%;
+                max-width: 450px;
+                height: 180px;
+                left: 30%;
+                background-color: crimson;
+                border: 3px solid #999999;
+                z-index: 9;
+            }
+            #contourchat{
+                position: fixed;
+                bottom: 10%;
+                width: 450px;
+                height: 180px;
+                background-color: crimson;
+                border-color: black;
+                border-style: groove;
+                display: flex;
+            }
+
+            #block{
+                position: fixed;
+                top: 30%;
+                left: 40%;
+                border-color:crimson;
+                color:green;
+            }
+
+            #message{
+                position: fixed; 
+                bottom: 11%;
+                left: 1%;
+            }
+
+            #btchat{
+                position: fixed;
+                bottom: 11%;
+                left: 12%;
+            }
+
+            #chat{
+                bottom: 10%;
+
+            }
+
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var numJoueur = -1;
+            var couleurs=["red","blue","yellow"];
+            var bocker= false;
+            var compteBlck = 0;
+            var nbBlck = 5;
+            var nbCDam = 11;
+            var nbLDam = 11;
+            var nbJ = 2;
+
+
+            var socket = io();
+            function test() {
+                console.log("J'appelle le serveur");
+                socket.emit('test', "Ô serveur, je t'envoie ce message");
+            }
+            socket.on('test', data => {
+                console.log('Réponse du serveur');
+                console.dir(data);
+            });
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour ADMIN
+             * 
+            */ 
+            function reset(){
+                socket.emit('resetS');
+                numJoueur = -1;
+                $("#listeJoueurs").text("");
+            }
+            $('#reset').on('click', reset);
+
+            socket.on('message', data =>{
+                console.log("erreur : "+data);
+                console.dir("erreur : " +data); //console de l'ordi
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ----------------------------------
+             *  Fonction Parametrage par le premier joueur
+             * 
+            */
+
+           function VnbCol(){
+                let Actual = document.getElementById("nbCDam").value;
+                let Modified = document.getElementById("nbCol").value;
+                Actual = Modified;
+                $("#VnbCol").toggle();
+            }
+
+           function VnbLign(){
+                let Actual = document.getElementById("nbLDam").value;
+                let Modified = document.getElementById("nbLign").value;
+                Actual = Modified;
+                $("#VnbLign").toggle();
+
+            }
+
+            function VnbJ(){
+                let Actual = document.getElementById("nbJ").value;
+                let Modified = document.getElementById("NBJ").value;
+                Actual = Modified;
+                $("#VnbJ").toggle();
+            } 
+
+
+           function choix(){
+            console.log("Choix en cours d'envoie");
+            let choixC = document.getElementById("nbCDam").value;
+            let choixL = document.getElementById("nbLDam").value;
+            let choixJ = document.getElementById("nbJ").value;
+            console.dir(choixC + " " + choixL +"  "+ choixJ);
+            if(choixC !=0 && choixL !=0 && choixJ >=2 && choixJ<=4){
+                socket.emit('parametrage',{'nbCDamier':nbCDam, 'nbLDamier':nbLDam, 'nbjoueurs':nbJ});
+                $("#valider").toggle();
+                genereDamier(20, nbLDam, nbCDam);
+            }
+           }
+
+            socket.on('PremierJ',nomJoueur =>{
+                console.log(nomJoueur+' doit choisir les paramètres de jeu.');
+                console.dir(nomJoueur+' doit choisir les paramètres de jeu.');
+            });
+
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour actualisé
+             * 
+            */  
+            function demandeJoueurs(){
+                console.log('Demande des joueurs');
+                socket.emit('joueursS');
+            }
+            socket.on('joueursC', nomsJoueurs => {
+                console.log("jouerus reçus du serveur : ");
+                console.dir(nomsJoueurs); //console de l'ordi
+                $("#listeJoueurs").text(nomsJoueurs);
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour entré dans partie
+             * 
+            */
+            function entrerDansLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Entré de "+ nom);
+                if(nom != "" && nom != " "){
+                    console.log("   emission de "+ nom);
+                    socket.emit('entreeS', nom);
+                }
+            }
+
+            socket.on('entreeC', data =>{
+                numJoueur = data.numJoueur;
+                console.log("confirmation de l'entre de "+ numJoueur);
+                $("#btentree").toggle();                       //* pour hide le boutont entré dans la partie
+                $("#listeJoueurs").text(data.nomsJoueurs);     //* pour actualiser la liste des joueurs de la partie
+            });
+            socket.on('entreeAutreJoueurC', data =>{
+                console.log("le serveur confirme l'entrée de "+ data.nomJoueur);
+                $('#listeJoueurs').text(data.nomsJoueurs);
+                if(data.nomsJoueurs.length == 2){
+                    $('#btentree').hide();
+                }
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+           
+            /**
+             *  ---------------------------------
+             *  fonctions pour quitter la partie
+             * 
+            */  
+            function quitterLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Sortie de "+ nom);
+                console.log(" emission de sortie pour "+ nom);
+                socket.emit('sortieS',nom);
+            }
+            socket.on('sortieC', data=>{
+                nomJoueur = data;
+                console.log("confirmation de la sortie de "+ nomJoueur);
+                $("#btentree").toggle();
+            });
+            socket.on('choixContinu', data=>{
+                console.dir("popup");
+                document.getElementById("popup").style.display = "block";
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour la popup
+             * 
+            */    
+            function softreset(){
+                document.getElementById("popup").style.display = "none";
+                genereDamier(20, 11, 11);
+                io.emit('softresetS');
+            }   
+            socket.on('switchNum', data =>{
+                console.log("changmenet "+data);
+                numJoueur=data;
+            });
+            function cacher(){
+                document.getElementById("popup").style.display = "none";
+            }                                
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour pion
+             * 
+            */            
+            function placerPion(){
+                console.log("placerPion de la part de "+ numJoueur);
+                var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
+                if(numJoueur != -1){
+                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur, 'blocker':bocker, 'compteBlck':compteBlck});
+                }
+            }
+            socket.on('pionC', data =>{
+                console.log("       socket pion client "+ numJoueur);
+                console.log('#h'+data.numHexagone);
+                if(data.blocker){
+                    bocker = false;
+                    compteBlck=data.compteBlck;
+                    $('#h'+data.numHexagone).attr('fill', 'green');
+                }else{
+                    $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
+                }
+            });
+            /**
+             *  
+             *  ---------------------------------
+             * 
+            */
+           
+            /**
+             *  ---------------------------------
+             *  fonctions pour le damier
+             * 
+            */
+            function creeHexagone(rayon) {
+                let points = new Array();
+                for (var i = 0; i < 6; ++i) {
+                    var angle = i * Math.PI / 3;
+                    var x = Math.sin(angle) * rayon; 
+                    var y = -Math.cos(angle) * rayon;
+                    points.push([Math.round(x*100)/100, Math.round(y*100)/100]);
+                }
+                return points;
+            }
+            function genereDamier(rayon, nbLignes, nbColonnes) {
+                distance = rayon - (Math.sin(1 * Math.PI / 3) * rayon);
+                d3.select("#tablier").append("svg").attr("width", (nbLignes*2)*2*rayon).attr("height",nbLignes*2*rayon);
+                var hexagone = creeHexagone(rayon);
+                for (var ligne=0; ligne < nbLignes; ligne++) {
+                    for (var colonne=0; colonne < nbColonnes; colonne++) {
+                        var d = ""; 
+                        var x, y;
+                        for (h in hexagone) {
+                            x = hexagone[h][0]+(rayon-distance)*(2+ligne+2*colonne);
+                            y = distance*2 + hexagone[h][1]+(rayon-distance*2)*(1+2*ligne);
+                            if (h == 0){ 
+                                d += "M"+x+","+y+" L"; 
+                            }else{ 
+                                d += x+","+y+" ";
+                            }
+                        } // gènère la forme
+                        d += "Z";
+                        d3.select("svg")
+                        .append("path")
+                        .attr("d", d).attr("stroke", "black").attr("fill", "white")
+                        .attr("id", "h"+(ligne*11+colonne))
+                        .on("click", placerPion);
+                    }
+                }
+            }
+            //window.addEventListener{genereDamier(20,nbLDam,nbCDam)};
+            /**
+             *  ---------------------------------
+             *  fonctions pour le chat
+             * 
+            */ 
+            function envoiMessage(){
+                let message  = document.getElementById("message").value;
+                if(message != ""){
+                    document.getElementById("message").value="";
+                    socket.emit('chat', {'numJoueur':numJoueur, 'message':message});   
+                }
+            }
+            socket.on('chatrotation', messages =>{
+                messages.forEach(message => {
+                    console.dir("message : "+messages);
+                    console.log("message : "+messages);
+                    $('#chat'+messages.indexOf(message)).text(message);
+                });
+                
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ----------------------------------
+             *  Fonction place un bloqueur
+             * 
+            */
+            function placerBlock(){
+                if(bocker == false){
+                    bocker=true;
+                    console.log(numJoueur+" veut placer un bloqueur");
+                    console.log("bocker = "+bocker);
+                    console.dir("bocker = "+bocker);
+                }else{
+                    bocker = false;
+                }
+            }
+            /*socket.on('backNope', data =>{
+                console.log("       socket nope client "+ numJoueur);
+                console.log('#h'+data.numHexagone);
+                $('#h'+data.numHexagone).attr('fill', "green");
+            });*/
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            
+            window.addEventListener('load', () => { test(); } );
+        </script>
+    </head>
+    <body>
+        Un jeu de Hex
+        <br>
+        <div id="lesJoueurs">Joueurs : <label id = "listeJoueurs"></label> </div>
+        <br/>
+        Votre nom <input id = "nom" type = "text"/>
+        <button type = "button" onClick = "entrerDansLaPartie()" id="btentree">Entrer dans la partie</button>
+        <button type = "button" onClick = "quitterLaPartie()" id="btquitee">Quitter la partie</button>
+        <button type = "button" onClick = "reset()">reset</button>
+
+        <div id = "VnbCol">
+            <br>Nombres de Colones<input id = "nbCol" type="text"/><br/>
+            <button type = "button" onClick = "VnbCol()">valider</button>
+        </div>
+        <div id = "VnbLign">
+            <br>Nombres de Lignes<input id = "nbLign" type="text"/><br/>
+            <button type = "button" onClick = "VnbLign()">valider</button>
+        </div>
+        <div id="VnbJ">
+            <br>nombres de Joueurs<input id = "NBJ" type="text"/><br/>
+            <button type = "button" onClick = "VnbJ()">valider</button>
+        </div>
+        <br><button type="button" id="valider" onclick = "choix()">Valider</button><br/>
+
+        <div id="tablier"></div>
+
+        <div id = "block">
+            <button type = "button" onclick = "placerBlock()">Bloqueur</button>
+        </div>
+
+        <div id="contourchat">
+            <div id="chat">
+                <p id="chat3"> </p>
+                <p id="chat2"> </p>
+                <p id="chat1"> </p>
+                <p id="chat0"> </p>
+                <input id = "message" type = "text"/>
+                <button type = "button" onClick = "envoiMessage()" id="btchat">Envoyer votre message</button>
+            </div>
+
+        <div id="contourpopup">
+            <div id="popup">
+                <form action="">
+                    <p>Un joueur est partie !!</p>
+                    <p>Voulez vous commencer une nouvelle partie ? ou continuelle celle la ?</p>
+                    <button type = "button" onClick = "softreset()">Nouvelle Partie</button>
+                    <button type = "button" onClick = "cacher()">Rester</button>
+                </form>
+            </div>
+        </div>
+
+    </body>
+</html>
