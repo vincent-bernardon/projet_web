@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <style>
+            #popup{
+                display: none;
+                text-align: center;
+                width: 45%;
+                height: 30%;
+                position: fixed;
+                top: 38%;
+                max-width: 450px;
+                height: 180px;
+                left: 30%;
+                background-color: crimson;
+                border: 3px solid #999999;
+                z-index: 9;
+            }
+            #params{
+                display: none;
+                text-align: center;
+                width: 45%;
+                height: 30%;
+                position: fixed;
+                top: 38%;
+                max-width: 450px;
+                height: 180px;
+                left: 30%;
+                background-color: crimson;
+                border: 3px solid #999999;
+                z-index: 7;
+            }
+            #popupvictoire{
+                display: none;
+                text-align: center;
+                width: 45%;
+                height: 30%;
+                position: fixed;
+                top: 38%;
+                max-width: 450px;
+                height: 180px;
+                left: 30%;
+                background-color: crimson;
+                border: 3px solid #999999;
+                z-index: 8;
+            }
+            #btV{
+                display: none;
+            }
+            #contourchat{
+                bottom: 10%;
+                width: 450px;
+                height: 180px;
+                background-color: crimson;
+                border-color: black;
+                border-style: groove;
+                display: flex;
+                right: 5%;
+            }
+
+            #block{
+                top: 30%;
+                left: 40%;
+                border-color:crimson;
+                color:green;
+            }
+
+            #message{
+                bottom: 11%;
+                left: 1%;
+            }
+
+            #btchat{
+                bottom: 11%;
+                left: 12%;
+            }
+
+            #chat{
+                bottom: 10%;
+
+            }
+
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var numJoueur = -1;
+            var couleurs=["red","blue","yellow"];
+            var bocker = false;
+            var explosif = false;
+            var compteBlck = 0;
+            var nbBlck = 5;
+            var nbCDam = 0;
+            var nbLDam = 0;
+            var nbJ = 2;
+            var damdam = false;
+            var NbExplo = 3;
+            var nbBlockeur = 5;
+
+
+            var socket = io();
+            function test() {
+                console.log("J'appelle le serveur");
+                socket.emit('test', "Ô serveur, je t'envoie ce message");
+            }
+            socket.on('test', data => {
+                console.log('Réponse du serveur');
+                console.dir(data);
+            });
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour ADMIN
+             * 
+            */ 
+            function reset(){
+                socket.emit('resetS');
+                numJoueur = -1;
+                $("#listeJoueurs").text("");
+            }
+            $('#reset').on('click', reset);
+
+            socket.on('message', data =>{
+                console.log("erreur : "+data);
+                console.dir("erreur : " +data); //console de l'ordi
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ----------------------------------
+             *  Fonction Parametrage par le premier joueur
+             * 
+            */
+
+           function VnbCol(){
+                nbCDam= document.getElementById("nbCol").value;
+            }
+
+           function VnbLign(){
+                nbLDam= document.getElementById("nbLign").value;
+            }
+
+            function VnbJ(){
+                nbJ = document.getElementById("NBJ").value;
+            } 
+
+
+            function choix(){
+                console.log("Choix en cours d'envoie");
+                let choixC = nbCDam;
+                let choixL = nbLDam;
+                let choixJ = nbJ;
+                console.dir(choixC + " " + choixL +"  "+ choixJ);
+                if(choixC !=0 && choixL !=0 && choixJ >=2 && choixJ<=4){
+                    document.getElementById("params").style.display = "none";
+                    socket.emit('parametrage',{'nbCDamier':nbCDam, 'nbLDamier':nbLDam, 'nbjoueurs':nbJ});
+                }
+            }
+
+            socket.on('paramatrageS', data =>{
+                console.log("entré paramatrageS");
+                genereDamier(20, data.nbLDamier, data.nbCDamier);
+            });
+
+            socket.on('PremierJ',nomJoueur =>{
+                document.getElementById("params").style.display = "block";
+                console.log(nomJoueur+' doit choisir les paramètres de jeu.');
+                console.dir(nomJoueur+' doit choisir les paramètres de jeu.');
+            });
+
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour actualisé
+             * 
+            */  
+            function demandeJoueurs(){
+                console.log('Demande des joueurs');
+                socket.emit('joueursS');
+            }
+            socket.on('joueursC', nomsJoueurs => {
+                console.log("jouerus reçus du serveur : ");
+                console.dir(nomsJoueurs); 
+                $("#listeJoueurs").text(nomsJoueurs);
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour entré dans partie
+             * 
+            */
+            function entrerDansLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Entré de "+ nom);
+                if(nom != "" && nom != " "){
+                    console.log("   emission de "+ nom);
+                    socket.emit('entreeS', nom);
+                }
+            }
+
+            socket.on('entreeC', data =>{
+                numJoueur = data.numJoueur;
+                console.log("confirmation de l'entre de "+ numJoueur);
+                $("#btentree").toggle();
+                $("#listeJoueurs").text(data.nomsJoueurs);
+            });
+            socket.on('entreeAutreJoueurC', data =>{
+                console.log("le serveur confirme l'entrée de "+ data.nomJoueur);
+                $('#listeJoueurs').text(data.nomsJoueurs);
+                if(data.nomsJoueurs.length == 2){
+                    $('#btentree').hide();
+                }
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+           
+            /**
+             *  ---------------------------------
+             *  fonctions pour quitter la partie
+             * 
+            */  
+            function quitterLaPartie(){
+                let nom = document.getElementById("nom").value;
+                console.log("Sortie de "+ nom);
+                console.log(" emission de sortie pour "+ nom);
+                socket.emit('sortieS',nom);
+            }
+            socket.on('sortieC', data=>{
+                nomJoueur = data;
+                console.log("confirmation de la sortie de "+ nomJoueur);
+                $("#btentree").toggle();
+            });
+            socket.on('choixContinu', data=>{
+                console.dir("popup");
+                document.getElementById("popup").style.display = "block";
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour la popup
+             * 
+            */   
+            socket.on('softreset', data=>{softreset(data.num)});
+            function softreset(num){
+                document.getElementById("popup").style.display = "none";
+                document.getElementById("popupvictoire").style.display = "none";
+                document.getElementById("btV").style.display = "none";
+                document.getElementById('tablier').innerHTML = "";
+                if(num == numJoueur){
+                    document.getElementById("params").style.display = "block";                
+                }
+            }   
+            socket.on('switchNum', data =>{
+                console.log("changmenet "+data);
+                numJoueur=data;
+            });
+            function cacher(){
+                document.getElementById("popup").style.display = "none";
+            }                                
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ---------------------------------
+             *  fonctions pour pion
+             * 
+            */            
+            function placerPion(){
+                console.log("placerPion de la part de "+ numJoueur);
+                var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
+                if(numJoueur != -1){
+                    socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur, 'blocker':bocker, 'Explose':explosif});
+                }
+            }
+            socket.on('pionC', data =>{
+                console.log("       socket pion client "+ numJoueur);
+                console.log('#h'+data.numHexagone); // pk sa s'arrete la quand j'utilise l'explosion?
+                if(data.blocker){
+                    if(nbBlockeur>0){
+                        console.log("Blocked!!!");
+                        bocker = false;
+                        $('#h'+data.numHexagone).attr('fill', 'green');
+                    }else{
+                        console.log("Out of stock!");
+                        console.dir("Out of stock!");
+                        bocker = false;
+
+                    }
+                }else{
+                    if(data.expl){
+                        if(nbExplo>0){
+                            console.log("BOOOM!!!");
+                            explosif = false;
+                            NbExplo=nbExplo-1;
+                            $('#h'+data.numHexagone).attr('fill', 'white');
+                            $('#h'+data.numHexagone+1).attr('fill', 'white');
+                            $('#h'+data.numHexagone-1).attr('fill', 'white');
+                            $('#h'+data.numHexagone+nbCDam).attr('fill', 'white');
+                            $('#h'+data.numHexagone+nbCDam-1).attr('fill', 'white');
+                            $('#h'+data.numHexagone-nbCDam).attr('fill', 'white');
+                            $('#h'+data.numHexagone-nbCDam-1).attr('fill', 'white');
+                        }else{
+                            console.log('Out of stock!');
+                            console.dir("Out of stock!");
+                            explosif = false;
+                        }
+                    }else{
+                        $('#h'+data.numHexagone).attr('fill', couleurs[data.numJoueur]);
+                    }
+                }
+            });
+            /**
+             *  
+             *  ---------------------------------
+             * 
+            */
+           
+            /**
+             *  ---------------------------------
+             *  fonctions pour le damier
+             * 
+            */
+            function creeHexagone(rayon) {
+                let points = new Array();
+                for (var i = 0; i < 6; ++i) {
+                    var angle = i * Math.PI / 3;
+                    var x = Math.sin(angle) * rayon; 
+                    var y = -Math.cos(angle) * rayon;
+                    points.push([Math.round(x*100)/100, Math.round(y*100)/100]);
+                }
+                return points;
+            }
+            function genereDamier(rayon, nbLignes, nbColonnes) {
+                distance = rayon - (Math.sin(1 * Math.PI / 3) * rayon);
+                d3.select("#tablier").append("svg").attr("width", (nbLignes*2)*2*rayon).attr("height",nbLignes*2*rayon);
+                var hexagone = creeHexagone(rayon);
+                for (var ligne=0; ligne < nbLignes; ligne++) {
+                    for (var colonne=0; colonne < nbColonnes; colonne++) {
+                        var d = ""; 
+                        var x, y;
+                        for (h in hexagone) {
+                            x = hexagone[h][0]+(rayon-distance)*(2+ligne+2*colonne);
+                            y = distance*2 + hexagone[h][1]+(rayon-distance*2)*(1+2*ligne);
+                            if (h == 0){ 
+                                d += "M"+x+","+y+" L"; 
+                            }else{ 
+                                d += x+","+y+" ";
+                            }
+                        } // gènère la forme
+                        d += "Z";
+                        d3.select("svg")
+                        .append("path")
+                        .attr("d", d).attr("stroke", "black").attr("fill", "white")
+                        .attr("id", "h"+(ligne*nbColonnes+colonne))
+                        .on("click", placerPion);
+                    }
+                }
+            }
+            window.addEventListener('load', () => { demandeJoueurs(); isSetDamier();});
+            function isSetDamier(){
+                socket.emit('isSet');
+            }
+            /**
+             *  ---------------------------------
+             *  fonctions pour le chat
+             * 
+            */ 
+            function envoiMessage(){
+                let message  = document.getElementById("message").value;
+                if(message != ""){
+                    document.getElementById("message").value="";
+                    socket.emit('chat', {'numJoueur':numJoueur, 'message':message});   
+                }
+            }
+            socket.on('chatrotation', messages =>{
+                messages.forEach(message => {
+                    console.dir("message : "+messages);
+                    console.log("message : "+messages);
+                    $('#chat'+messages.indexOf(message)).text(message);
+                });
+                
+            });
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ----------------------------------
+             *  Fonction place un bloqueur
+             * 
+            */
+            function placerBlock(){
+                if(bocker == false){
+                    bocker=true;
+                    console.log(numJoueur+" veut placer un bloqueur");
+                    console.log("bocker = "+bocker);
+                    console.dir("bocker = "+bocker);
+                }else{
+                    bocker = false;
+                }
+            }
+            
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+
+            /**
+             *  ----------------------------------
+             *  Fonction place un bloqueur
+             * 
+            */
+
+            function placerExplo(){
+                if(explosif == false){
+                    explosif = true;
+                    console.log(numJoueur+" veut placer un explosif");
+                    console.log("explosif = "+explosif);
+                    console.dir("explosif = "+explosif);
+                }else{
+                    explosif = false;
+                }
+            }
+
+            /**
+             *  
+             *  ----------------------------------
+             * 
+            */
+            socket.on('victoire', data=>{
+                $("#victoire").text("VICTOIRE DE "+data.qui);
+                document.getElementById("popupvictoire").style.display = "block";
+                if(data.constance==numJoueur){
+                    document.getElementById("btV").style.display = "block";
+                }
+            });
+
+            function actualisation(){
+                socket.emit('affiche', {'numJoueur':numJoueur});  
+                socket.emit('softresetS'); 
+            }
+
+            
+            window.addEventListener('load', () => { test(); } );
+        </script>
+    </head>
+    <body>
+        Un jeu de Hex
+        <br>
+        <div id="lesJoueurs">Joueurs : <label id = "listeJoueurs"></label> </div>
+        <br/>
+        Votre nom <input id = "nom" type = "text"/>
+        <button type = "button" onClick = "entrerDansLaPartie()" id="btentree">Entrer dans la partie</button>
+        <button type = "button" onClick = "quitterLaPartie()" id="btquitee">Quitter la partie</button>
+        <!--<button type = "button" onClick = "reset()">reset</button>-->
+
+        <div id="params">
+        <div id = "VnbCol">
+            <br>Nombres de Colones<input id = "nbCol" type="text" placeholder="recommandé 11"/><br/>
+        </div>
+        <div id = "VnbLign">
+            <br>Nombres de Lignes<input id = "nbLign" type="text" placeholder="recommandé 11"/><br/>
+        </div>
+        <div id="VnbJ">
+            <br>nombres de Joueurs<input id = "NBJ" type="text" placeholder="recommandé 2"/><br/>
+        </div>
+        <br><button type="button" id="valider" onclick = "VnbCol(),VnbLign(),VnbJ(),choix()">Valider</button><br/>
+        </div>
+
+        <div id="tablier"></div>
+
+        <div id = "block">
+            <button type = "button" onclick = "placerBlock()">Bloqueur</button>
+            <button type = "button" onclick = "placerExplo()">Explosif</button>
+        </div>
+
+        <div id="contourchat">
+            <div id="chat">
+                <p id="chat3"> </p>
+                <p id="chat2"> </p>
+                <p id="chat1"> </p>
+                <p id="chat0"> </p>
+                <input id = "message" type = "text"/>
+                <button type = "button" onClick = "envoiMessage()" id="btchat">Envoyer votre message</button>
+            </div>
+        </div>
+        <div id="contourpopup">
+            <div id="popup">
+                <form action="">
+                    <p>Un joueur est partie !!</p>
+                    <p>Voulez vous commencer une nouvelle partie ? ou continuelle celle la ?</p>
+                    <button type = "button" onClick = "softreset()">Nouvelle Partie</button>
+                    <button type = "button" onClick = "cacher()">Rester</button>
+                </form>
+            </div>
+        </div>
+        <div id="popupvictoire">
+            <form action="">
+                <h1 id="victoire"></h1>
+                <button type = "button" onClick = "actualisation()" id="btV">Nouvelle Partie</button>
+            </form>
+        </div>
+
+    </body>
+</html>
