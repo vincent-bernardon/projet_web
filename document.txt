@@ -1,0 +1,12 @@
+Projet réalisé par : Vincent BERNARDON et Thomas QUINTANA
+Respectivement des groupes : D et C
+
+- paramétrage par le premier joueur : fait
+
+- sortie d’un joueur : fait
+
+- détection automatique de la victoire : fait
+
+- pose d’hexagones « corridors » : nous avons adapté ce système a notre façon en mettant en place des pion bloquants
+
+- chat : fait
