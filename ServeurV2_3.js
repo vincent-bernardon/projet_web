@@ -222,7 +222,7 @@ io.on('connection', (socket) => {
                 if(position>=0 && position <hex.length){
                     if(hex[position] != 420000){
                         if(data.explosif){
-                            hex[position]=430000;
+                            hex[position]=430000;             //changement
                             console.log("Explosif Armé");
                         }else{
                             if(data.blocker){
@@ -250,7 +250,10 @@ io.on('connection', (socket) => {
                         io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker, 'expl':data.explosif});
                         }
                     }else{
-                        socket.emit("message", "Emplacement deja pris");
+                        if(data.explosif){
+                            hex[position]=430000;                  //changement
+                            console.log("Explosif Armé");
+                        }else{socket.emit("message", "Emplacement deja pris");}
                     }
                 }else{
                     socket.emit("message", "coordonnées pas bonne");
