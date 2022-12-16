@@ -294,6 +294,8 @@
                 var numHexagone = parseInt(d3.select(this).attr('id').substring(1));
                 if(numJoueur != -1){
                     socket.emit('pionS', {'numHexagone': numHexagone, 'numJoueur':numJoueur, 'blocker':bocker});
+                }else{
+                    console.log("numJoueur="+ numJoueur+'   donc pas le droit de jouer');
                 }
             }
             socket.on('pionC', data =>{
