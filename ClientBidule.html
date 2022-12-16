@@ -16,6 +16,37 @@
                 border: 3px solid #999999;
                 z-index: 9;
             }
+            #params{
+                display: none;
+                text-align: center;
+                width: 45%;
+                height: 30%;
+                position: fixed;
+                top: 38%;
+                max-width: 450px;
+                height: 180px;
+                left: 30%;
+                background-color: crimson;
+                border: 3px solid #999999;
+                z-index: 7;
+            }
+            #popupvictoire{
+                display: none;
+                text-align: center;
+                width: 45%;
+                height: 30%;
+                position: fixed;
+                top: 38%;
+                max-width: 450px;
+                height: 180px;
+                left: 30%;
+                background-color: crimson;
+                border: 3px solid #999999;
+                z-index: 8;
+            }
+            #btV{
+                display: none;
+            }
             #contourchat{
                 bottom: 10%;
                 width: 450px;
@@ -105,18 +136,14 @@
 
            function VnbCol(){
                 nbCDam= document.getElementById("nbCol").value;
-                $("#VnbCol").toggle();
             }
 
            function VnbLign(){
                 nbLDam= document.getElementById("nbLign").value;
-                $("#VnbLign").toggle();
-
             }
 
             function VnbJ(){
                 nbJ = document.getElementById("NBJ").value;
-                $("#VnbJ").toggle();
             } 
 
 
@@ -127,10 +154,8 @@
                 let choixJ = nbJ;
                 console.dir(choixC + " " + choixL +"  "+ choixJ);
                 if(choixC !=0 && choixL !=0 && choixJ >=2 && choixJ<=4){
+                    document.getElementById("params").style.display = "none";
                     socket.emit('parametrage',{'nbCDamier':nbCDam, 'nbLDamier':nbLDam, 'nbjoueurs':nbJ});
-                    $("#valider").toggle();
-                    damdam=true;
-                    //genereDamier(20, nbLDam, nbCDam);
                 }
             }
 
@@ -140,6 +165,7 @@
             });
 
             socket.on('PremierJ',nomJoueur =>{
+                document.getElementById("params").style.display = "block";
                 console.log(nomJoueur+' doit choisir les paramètres de jeu.');
                 console.dir(nomJoueur+' doit choisir les paramètres de jeu.');
             });
@@ -233,11 +259,16 @@
              *  ---------------------------------
              *  fonctions pour la popup
              * 
-            */    
-            function softreset(){
+            */   
+            socket.on('softreset', data=>{softreset(data.num)});
+            function softreset(num){
                 document.getElementById("popup").style.display = "none";
-                genereDamier(20, 11, 11);
-                io.emit('softresetS');
+                document.getElementById("popupvictoire").style.display = "none";
+                document.getElementById("btV").style.display = "none";
+                document.getElementById('tablier').innerHTML = "";
+                if(num == numJoueur){
+                    document.getElementById("params").style.display = "block";                
+                }
             }   
             socket.on('switchNum', data =>{
                 console.log("changmenet "+data);
@@ -316,7 +347,7 @@
                         d3.select("svg")
                         .append("path")
                         .attr("d", d).attr("stroke", "black").attr("fill", "white")
-                        .attr("id", "h"+(ligne*11+colonne))
+                        .attr("id", "h"+(ligne*nbColonnes+colonne))
                         .on("click", placerPion);
                     }
                 }
@@ -376,6 +407,18 @@
              *  ----------------------------------
              * 
             */
+            socket.on('victoire', data=>{
+                $("#victoire").text("VICTOIRE DE "+data.qui);
+                document.getElementById("popupvictoire").style.display = "block";
+                if(data.constance==numJoueur){
+                    document.getElementById("btV").style.display = "block";
+                }
+            });
+
+            function actualisation(){
+                socket.emit('affiche', {'numJoueur':numJoueur});  
+                socket.emit('softresetS'); 
+            }
 
             
             window.addEventListener('load', () => { test(); } );
@@ -389,21 +432,20 @@
         Votre nom <input id = "nom" type = "text"/>
         <button type = "button" onClick = "entrerDansLaPartie()" id="btentree">Entrer dans la partie</button>
         <button type = "button" onClick = "quitterLaPartie()" id="btquitee">Quitter la partie</button>
-        <button type = "button" onClick = "reset()">reset</button>
+        <!--<button type = "button" onClick = "reset()">reset</button>-->
 
+        <div id="params">
         <div id = "VnbCol">
-            <br>Nombres de Colones<input id = "nbCol" type="text"/><br/>
-            <button type = "button" onClick = "VnbCol()">valider</button>
+            <br>Nombres de Colones<input id = "nbCol" type="text" placeholder="recommandé 11"/><br/>
         </div>
         <div id = "VnbLign">
-            <br>Nombres de Lignes<input id = "nbLign" type="text"/><br/>
-            <button type = "button" onClick = "VnbLign()">valider</button>
+            <br>Nombres de Lignes<input id = "nbLign" type="text" placeholder="recommandé 11"/><br/>
         </div>
         <div id="VnbJ">
-            <br>nombres de Joueurs<input id = "NBJ" type="text"/><br/>
-            <button type = "button" onClick = "VnbJ()">valider</button>
+            <br>nombres de Joueurs<input id = "NBJ" type="text" placeholder="recommandé 2"/><br/>
         </div>
-        <br><button type="button" id="valider" onclick = "choix()">Valider</button><br/>
+        <br><button type="button" id="valider" onclick = "VnbCol(),VnbLign(),VnbJ(),choix()">Valider</button><br/>
+        </div>
 
         <div id="tablier"></div>
 
@@ -420,7 +462,7 @@
                 <input id = "message" type = "text"/>
                 <button type = "button" onClick = "envoiMessage()" id="btchat">Envoyer votre message</button>
             </div>
-
+        </div>
         <div id="contourpopup">
             <div id="popup">
                 <form action="">
@@ -430,6 +472,12 @@
                     <button type = "button" onClick = "cacher()">Rester</button>
                 </form>
             </div>
+        </div>
+        <div id="popupvictoire">
+            <form action="">
+                <h1 id="victoire"></h1>
+                <button type = "button" onClick = "actualisation()" id="btV">Nouvelle Partie</button>
+            </form>
         </div>
 
     </body>

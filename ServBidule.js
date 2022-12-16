@@ -7,9 +7,6 @@ const io = new require("socket.io")(server);
 var joueurs = [] ;
 var hex = [];
 var messages = [];
-for (i=0; i<121; i++) {
-    hex.push(-1);
-}
 var jeton = -1;
 var dernierPion = -1;
 var blckUsed = false;
@@ -41,9 +38,6 @@ io.on('connection', (socket) => {
         dernierPion = -1;
         joueurs = [] ;
         hex = [];
-        for (i=0; i<121; i++) {
-            hex.push(-1);
-        }
     }
     socket.on('resetS', reset);
     /**
@@ -106,16 +100,19 @@ io.on('connection', (socket) => {
 
     socket.on('parametrage',data =>{
         console.log('entré dans parametrage');
-        nbJoueurs=data.nbjoueurs;
-        nbCDamier=data.nbCDamier;
-        nbLDamier=data.nbLDamier;
+        nbJoueurs=Number(data.nbjoueurs);
+        nbCDamier=Number(data.nbCDamier);
+        nbLDamier=Number(data.nbLDamier);
+        for (i=0; i<((nbLDamier)*(nbCDamier)); i++) {
+            hex.push(-1);
+        }
         console.log(nbJoueurs+" "+nbCDamier+" "+nbLDamier);
         io.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier});
     });
 
     socket.on('isSet', data=>{
         if(nbCDamier>0 && nbLDamier>0){
-            io.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier});
+            socket.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier});
         }
     });
 
@@ -130,7 +127,7 @@ io.on('connection', (socket) => {
         if(index != -1){
             joueurs.splice(index,1);
             let nomsJoueurs = joueurs.join(' ');
-            socket.emit('sortieC',nomJoueur);
+            socket.emit('sudC',nomJoueur);
             io.emit('joueursC',nomsJoueurs);
 
             socket.broadcast.emit('choixContinu', index);
@@ -157,8 +154,9 @@ io.on('connection', (socket) => {
     socket.on('softresetS', data =>{
         jeton = 0;
         dernierPion = -1;
+        let ui = hex.length;
         hex = [];
-        for (i=0; i<121; i++) {
+        for (i=0; i<ui; i++) {
             hex.push(-1);
         }
 
@@ -221,20 +219,34 @@ io.on('connection', (socket) => {
         if(jeton != -1){
             if(data.numJoueur == jeton){
                 let position = data.numHexagone;
-                if(position>=0 && position <121){
+                if(position>=0 && position <hex.length){
                     if(hex[position] != 42){
+                        io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker});
+
                         if(data.blocker){ // rajouter que si on joue blocker, peux pas rejouer par la suite
                             hex[position]=42;
+
+
                         }else{
                             hex[position] = jeton;
+       
+                            
+                            debug = 1;
+                            let dP = [];
+                            let aP = [position];
+                            console.log(dP + "   "+aP);
+                            console.dir(dP + "   "+aP);
+                            victoire(dP,aP,nord=false,sud=false,est=false,west=false);
+
                             jeton++;
                             if(jeton == 2){ 
                                 jeton = 0;
-                            }
+                            } 
+
                             console.log("Pion placé en "+position+" par "+data.numJoueur);
+                            
                         }
 
-                            io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker});
                     }else{
                         socket.emit("message", "Emplacement deja pris");
                     }
@@ -316,6 +328,131 @@ io.on('connection', (socket) => {
             socket.emit('message', 'Parti pas débuté');
         }
     });
+    /**
+     * 
+     *  ----------------------------------
+     * 
+     */
+    /**
+     *  ---------------------------------
+     *  fonctions pour la win
+     * 
+    */
+    let debug =1;
+    function victoire(dejaParcouru, aParcourir, nord, sud, est, west){
+        console.log("dejaParcouru="+dejaParcouru + "   aParcourir="+aParcourir+"     nord="+nord + "   sud="+sud+ "   est="+est+ "   west="+west);
+        console.dir("dejaParcouru="+dejaParcouru + "   aParcourir="+aParcourir+"     nord="+nord + "   sud="+sud+ "   est="+est+ "   west="+west);
+        console.log('CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC'+hex.length);
+        console.dir('CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC');
+
+        if(aParcourir.length == 0){
+            console.log('NNNNNNNN');
+            console.dir('NNNNNNNN');
+            return 2;
+        }
+        if(debug > 0){
+            console.log('STARTSTARTSTARTSTARTSTARTSTART');
+            console.dir('STARTSTARTSTARTSTARTSTARTSTART');
+            debug--;
+        }
+        
+
+        aParcourir.reverse();
+        let maPose = aParcourir.pop();
+        aParcourir.reverse();
+
+        
+        if(!nord && maPose>=0 && maPose <nbCDamier){
+            nord = true;
+            console.log('nord ='+nord);
+            console.dir('nord ='+nord);
+        }
+        if(!sud && maPose<=hex.length && maPose>=((hex.length)-(nbCDamier))){
+            sud = true;
+            console.log('sud ='+sud);
+            console.dir('sud ='+sud);
+        }
+        if(!west && maPose%nbCDamier==0){
+            west = true;
+            console.log('west ='+west);
+            console.dir('west ='+west);
+        }
+        if(!est && maPose%nbCDamier==(nbCDamier-1)){
+            est = true;
+            console.log('est ='+est);
+            console.dir('est ='+est);
+        }
+
+
+        console.log('maPose-1='+(maPose-1)+'   maPose='+maPose+'  hex[maPose-1]='+hex[maPose-1]+"  hex[maPose]="+hex[maPose]);
+        console.dir('maPose-1='+(maPose-1)+'   maPose='+maPose+'hex[maPose-1]='+hex[maPose-1]+"  hex[maPose]="+hex[maPose]);
+        if(hex[maPose-1]==hex[maPose] && !dejaParcouru.includes(maPose-1)){
+            aParcourir.push(maPose-1);
+            console.log('51aParcourir ='+aParcourir);
+            console.dir('51aParcourir ='+aParcourir);
+        }
+        console.log('maPose+1='+(maPose+1)+'   maPose='+maPose+'hex[maPose+1]='+hex[maPose+1]+"  hex[maPose]="+hex[maPose]);
+        console.dir('maPose+1='+(maPose+1)+'   maPose='+maPose+'hex[maPose+1]='+hex[maPose+1]+"  hex[maPose]="+hex[maPose]);
+        if(hex[maPose+1]==hex[maPose] && !dejaParcouru.includes(maPose+1)){
+            aParcourir.push(maPose+1);
+            console.log('52aParcourir ='+aParcourir);
+            console.dir('52aParcourir ='+aParcourir);
+        }
+        console.log('maPose-(nbCDamier-1)='+(maPose-(nbCDamier-1))+'   maPose='+maPose+'hex[maPose-(nbCDamier-1)]='+hex[maPose-(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
+        console.dir('maPose-(nbCDamier-1)='+(maPose-(nbCDamier-1))+'   maPose='+maPose+'hex[maPose-(nbCDamier-1)]='+hex[maPose-(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
+        if(hex[maPose-(nbCDamier-1)]==hex[maPose] && !dejaParcouru.includes(maPose-(nbCDamier-1))){
+            aParcourir.push(maPose-(nbCDamier-1));
+            console.log('53aParcourir ='+aParcourir);
+            console.dir('53aParcourir ='+aParcourir);
+        }
+        console.log('maPose-(nbCDamier)='+(maPose-(nbCDamier))+'   maPose='+maPose+'hex[maPose-(nbCDamier)]='+hex[maPose-(nbCDamier)]+"  hex[maPose]="+hex[maPose]);
+        console.dir('maPose-(nbCDamier)='+(maPose-(nbCDamier))+'   maPose='+maPose+'hex[maPose-(nbCDamier)]='+hex[maPose-(nbCDamier)]+"  hex[maPose]="+hex[maPose]);
+        if(hex[maPose-(nbCDamier)]==hex[maPose] && !dejaParcouru.includes(maPose-(nbCDamier))){
+            aParcourir.push(maPose-(nbCDamier));
+            console.log('54aParcourir ='+aParcourir);
+            console.dir('54aParcourir ='+aParcourir);
+        }
+        console.log('maPose+(nbCDamier-1)='+(maPose+(nbCDamier-1))+'   maPose='+maPose+'hex[maPose+(nbCDamier-1)]='+hex[maPose+(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
+        console.dir('maPose+(nbCDamier-1)='+(maPose+(nbCDamier-1))+'   maPose='+maPose+'hex[maPose+(nbCDamier-1)]='+hex[maPose+(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
+        if(hex[maPose+(nbCDamier-1)]==hex[maPose] && !dejaParcouru.includes(maPose+(nbCDamier-1))){
+            aParcourir.push(maPose+(nbCDamier-1));
+            console.log('55aParcourir ='+aParcourir);
+            console.dir('55aParcourir ='+aParcourir);
+        }
+        console.log('nbCDamier='+nbCDamier);
+        console.dir('nbCDamier='+nbCDamier);
+        let temp = maPose+Number(nbCDamier);
+        console.log('temp='+temp);
+        console.dir('temp='+temp);
+        console.log('maPose+nbCDamier='+(maPose+nbCDamier)+'   maPose='+maPose+'hex[maPose+(nbCDamier)]='+hex[maPose+(nbCDamier)]+"  hex[maPose]="+hex[maPose]);
+        console.dir('maPose+(nbCDamier='+(maPose+nbCDamier)+'   maPose='+maPose+'hex[maPose+(nbCDamier)]='+hex[maPose+(nbCDamier)]+"  hex[maPose]="+hex[maPose]);
+        if(hex[maPose+(nbCDamier)]==hex[maPose] && !dejaParcouru.includes(maPose+(nbCDamier))){
+            aParcourir.push(maPose+(nbCDamier));
+            console.log('56aParcourir ='+aParcourir);
+            console.dir('56aParcourir ='+aParcourir);
+        }
+
+        
+        if((nord && sud)||(est && west)){
+            console.log("VICTOIRE");
+            console.dir("VICTOIRE");
+            io.emit('victoire', {'qui':joueurs[jeton],'constance':0});
+            jeton=-1;
+            return 0;
+        }else{
+            dejaParcouru.push(maPose);
+            victoire(dejaParcouru, aParcourir, nord, sud, est, west);
+        }
+
+    }
+
+    
+
+    socket.on('affiche', data=>{
+        io.emit('softreset', {'num':data.numJoueur});
+    });
+
+
     /**
      * 
      *  ----------------------------------
