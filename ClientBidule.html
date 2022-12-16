@@ -86,7 +86,7 @@
         <script src="/socket.io/socket.io.js"></script>
         <script>
             var numJoueur = -1;
-            var couleurs=["red","blue","yellow"];
+            var couleurs=["red","blue","yellow","violet"];
             var bocker= false;
             var compteBlck = 0;
             var nbBlck = 5;
@@ -161,6 +161,7 @@
 
             socket.on('paramatrageS', data =>{
                 console.log("entré paramatrageS");
+                nbJ = data.nbjoueurs;
                 genereDamier(20, data.nbLDamier, data.nbCDamier);
             });
 
@@ -219,7 +220,7 @@
             socket.on('entreeAutreJoueurC', data =>{
                 console.log("le serveur confirme l'entrée de "+ data.nomJoueur);
                 $('#listeJoueurs').text(data.nomsJoueurs);
-                if(data.nomsJoueurs.length == 2){
+                if(data.nomsJoueurs.length == nbJ){
                     $('#btentree').hide();
                 }
             });

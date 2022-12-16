@@ -71,12 +71,12 @@ io.on('connection', (socket) => {
         if(joueurs.length==0){
             socket.emit('PremierJ',nomJoueur);
         }
-        if(joueurs.length<2){
+        if(joueurs.length<nbJoueurs){
             if(!joueurs.includes(nomJoueur)){
                 console.log("entree du joueur");
                 console.dir("entree du joueur");
                 joueurs.push(nomJoueur);
-                if(joueurs.length == 2 && dernierPion == -1){
+                if(joueurs.length == nbJoueurs && dernierPion == -1){
                     jeton = 0;
                 }
                 let nomsJoueurs = joueurs.join(' ');
@@ -107,7 +107,7 @@ io.on('connection', (socket) => {
             hex.push(-1);
         }
         console.log(nbJoueurs+" "+nbCDamier+" "+nbLDamier);
-        io.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier});
+        io.emit('paramatrageS', {'nbCDamier':nbCDamier, 'nbLDamier':nbLDamier, 'nbjoueurs':data.nbjoueurs});
     });
 
     socket.on('isSet', data=>{
@@ -239,7 +239,7 @@ io.on('connection', (socket) => {
                             victoire(dP,aP,nord=false,sud=false,est=false,west=false);
 
                             jeton++;
-                            if(jeton == 2){ 
+                            if(jeton == nbJoueurs){ 
                                 jeton = 0;
                             } 
 
