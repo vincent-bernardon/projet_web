@@ -386,21 +386,21 @@ io.on('connection', (socket) => {
 
         console.log('maPose-1='+(maPose-1)+'   maPose='+maPose+'  hex[maPose-1]='+hex[maPose-1]+"  hex[maPose]="+hex[maPose]);
         console.dir('maPose-1='+(maPose-1)+'   maPose='+maPose+'hex[maPose-1]='+hex[maPose-1]+"  hex[maPose]="+hex[maPose]);
-        if(hex[maPose-1]==hex[maPose] && !dejaParcouru.includes(maPose-1)){
+        if(hex[maPose-1]==hex[maPose] && !dejaParcouru.includes(maPose-1) && !(maPose%nbCDamier==0)){
             aParcourir.push(maPose-1);
             console.log('51aParcourir ='+aParcourir);
             console.dir('51aParcourir ='+aParcourir);
         }
         console.log('maPose+1='+(maPose+1)+'   maPose='+maPose+'hex[maPose+1]='+hex[maPose+1]+"  hex[maPose]="+hex[maPose]);
         console.dir('maPose+1='+(maPose+1)+'   maPose='+maPose+'hex[maPose+1]='+hex[maPose+1]+"  hex[maPose]="+hex[maPose]);
-        if(hex[maPose+1]==hex[maPose] && !dejaParcouru.includes(maPose+1)){
+        if(hex[maPose+1]==hex[maPose] && !dejaParcouru.includes(maPose+1) && !(maPose%nbCDamier==(nbCDamier-1))){
             aParcourir.push(maPose+1);
             console.log('52aParcourir ='+aParcourir);
             console.dir('52aParcourir ='+aParcourir);
         }
         console.log('maPose-(nbCDamier-1)='+(maPose-(nbCDamier-1))+'   maPose='+maPose+'hex[maPose-(nbCDamier-1)]='+hex[maPose-(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
         console.dir('maPose-(nbCDamier-1)='+(maPose-(nbCDamier-1))+'   maPose='+maPose+'hex[maPose-(nbCDamier-1)]='+hex[maPose-(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
-        if(hex[maPose-(nbCDamier-1)]==hex[maPose] && !dejaParcouru.includes(maPose-(nbCDamier-1))){
+        if(hex[maPose-(nbCDamier-1)]==hex[maPose] && !dejaParcouru.includes(maPose-(nbCDamier-1)) && !(maPose%nbCDamier==(nbCDamier-1))){
             aParcourir.push(maPose-(nbCDamier-1));
             console.log('53aParcourir ='+aParcourir);
             console.dir('53aParcourir ='+aParcourir);
@@ -414,7 +414,7 @@ io.on('connection', (socket) => {
         }
         console.log('maPose+(nbCDamier-1)='+(maPose+(nbCDamier-1))+'   maPose='+maPose+'hex[maPose+(nbCDamier-1)]='+hex[maPose+(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
         console.dir('maPose+(nbCDamier-1)='+(maPose+(nbCDamier-1))+'   maPose='+maPose+'hex[maPose+(nbCDamier-1)]='+hex[maPose+(nbCDamier-1)]+"  hex[maPose]="+hex[maPose]);
-        if(hex[maPose+(nbCDamier-1)]==hex[maPose] && !dejaParcouru.includes(maPose+(nbCDamier-1))){
+        if(hex[maPose+(nbCDamier-1)]==hex[maPose] && !dejaParcouru.includes(maPose+(nbCDamier-1)) && !(maPose%nbCDamier==0)){
             aParcourir.push(maPose+(nbCDamier-1));
             console.log('55aParcourir ='+aParcourir);
             console.dir('55aParcourir ='+aParcourir);
