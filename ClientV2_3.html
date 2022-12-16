@@ -95,8 +95,8 @@
             var nbLDam = 0;
             var nbJ = 2;
             var damdam = false;
-            var NbExplo = 3;
-            var nbBlockeur = 5;
+            var NbExplo = 3;             //______________
+            var nbBlockeur = 5;          //______________
 
 
             var socket = io();
@@ -307,7 +307,7 @@
                         bocker = false;
                         $('#h'+data.numHexagone).attr('fill', 'green');
                     }else{
-                        console.log("Out of stock!");
+                        console.log("Out of stock!");              //______________
                         console.dir("Out of stock!");
                         bocker = false;
 
@@ -317,14 +317,14 @@
                         if(nbExplo>0){
                             console.log("BOOOM!!!");
                             explosif = false;
-                            NbExplo=nbExplo-1;
+                            NbExplo=nbExplo-1;                                  //______________
                             $('#h'+data.numHexagone).attr('fill', 'white');
-                            $('#h'+data.numHexagone+1).attr('fill', 'white');
+                            /*$('#h'+data.numHexagone+1).attr('fill', 'white');
                             $('#h'+data.numHexagone-1).attr('fill', 'white');
                             $('#h'+data.numHexagone+nbCDam).attr('fill', 'white');
                             $('#h'+data.numHexagone+nbCDam-1).attr('fill', 'white');
                             $('#h'+data.numHexagone-nbCDam).attr('fill', 'white');
-                            $('#h'+data.numHexagone-nbCDam-1).attr('fill', 'white');
+                            $('#h'+data.numHexagone-nbCDam-1).attr('fill', 'white');*/
                         }else{
                             console.log('Out of stock!');
                             console.dir("Out of stock!");
