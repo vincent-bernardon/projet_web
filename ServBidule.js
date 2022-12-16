@@ -221,7 +221,6 @@ io.on('connection', (socket) => {
                 let position = data.numHexagone;
                 if(position>=0 && position <hex.length){
                     if(hex[position] != 42){
-                        io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker});
 
                         if(data.blocker){ // rajouter que si on joue blocker, peux pas rejouer par la suite
                             hex[position]=42;
@@ -246,6 +245,7 @@ io.on('connection', (socket) => {
                             console.log("Pion placé en "+position+" par "+data.numJoueur);
                             
                         }
+                        io.emit('pionC', {'numHexagone': data.numHexagone, 'numJoueur': data.numJoueur, 'blocker': data.blocker});
 
                     }else{
                         socket.emit("message", "Emplacement deja pris");
